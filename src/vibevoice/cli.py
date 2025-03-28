@@ -16,8 +16,8 @@ VOICEKEY_DEFAULT = "alt_r"  # old default "ctrl_r"
 
 
 def start_whisper_server():
-    server_script = os.path.join(os.path.dirname(__file__), 'server.py')
-    process = subprocess.Popen(['python', server_script])
+    server_script = os.path.join(os.path.dirname(__file__), "server.py")
+    process = subprocess.Popen(["python", server_script])
     return process
 
 
