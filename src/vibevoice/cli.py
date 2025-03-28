@@ -20,6 +20,7 @@ from keyboard import keyboard_controller
 
 from macros import MACROS
 
+SERVER_HOST="http://localhost:4242"
 MIN_SAMPLES_FOR_TRANSCRIBE = 8000
 VOICEKEY_DEFAULT = "shift_r" # + CTRL
 RAW_MODE = False
@@ -37,7 +38,7 @@ def wait_for_server(timeout=1800, interval=0.5):
 
     while time.time() - start_time < timeout:
         try:
-            response = requests.get("http://localhost:4242/health")
+            response = requests.get(f"{SERVER_HOST}/health")
             if response.status_code == 200:
                 return True
         except requests.exceptions.RequestException:
@@ -142,7 +143,7 @@ def main():
 
             try:
                 response = requests.post(
-                    "http://localhost:4242/transcribe/",
+                    f"{SERVER_HOST}/transcribe",
                     json={"file_path": recording_path},
                 )
                 response.raise_for_status()
