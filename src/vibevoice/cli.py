@@ -10,6 +10,7 @@ import sounddevice as sd
 import numpy as np
 import requests
 from pynput.keyboard import Controller as KeyboardController, Key, Listener
+from pynput import keyboard
 from scipy.io import wavfile
 import sys
 
@@ -17,16 +18,50 @@ MIN_SAMPLES_FOR_TRANSCRIBE = 8000
 VOICEKEY_DEFAULT = "shift_r"  # old default "ctrl_r"
 RAW_MODE = False
 
-SUBS = {
-    'asterisk': '*',
-    'atsign': '@',
-    'spacebar': ' ',
-    'enter': '\n',
-    'return': '\n',
-    'newline': '\n',
-}
-
 keyboard_controller = None
+
+
+def tap_key(key):
+    keyboard_controller.press(key)
+    keyboard_controller.release(key)
+
+
+def tap_undo():
+    keyboard_controller.press(Key.ctrl)
+    keyboard_controller.press("z")
+    keyboard_controller.release("z")
+    keyboard_controller.release(Key.ctrl)
+
+
+MACROS = {
+    "asterisk": "*",
+    "atsign": "@",
+    "spacebar": " ",
+    "enter": "\n",
+    "return": "\n",
+    "newline": "\n",
+    "up": lambda: tap_key(Key.up),
+    "down": lambda: tap_key(Key.down),
+    "left": lambda: tap_key(Key.left),
+    "right": lambda: tap_key(Key.right),
+    "escape": lambda: tap_key(Key.esc),
+    "tab": lambda: tap_key(Key.tab),
+    "end": lambda: tap_key(Key.end),
+    "home": lambda: tap_key(Key.home),
+    "pagedown": lambda: tap_key(Key.page_down),
+    "pageup": lambda: tap_key(Key.page_up),
+    "backspace": lambda: tap_key(Key.backspace),
+    "undo": lambda: tap_undo(),
+    # Common punctuation and symbols
+    "exclamationpoint": "!",
+    "questionmark": "?",
+    "period": ".",
+    "comma": ",",
+    "semicolon": ";",
+    "colon": ":",
+    "dash": "-",
+    "underscore": "_",
+}
 
 
 def start_whisper_server():
@@ -53,19 +88,28 @@ def wait_for_server(timeout=1800, interval=0.5):
 
 def process_typed(text):
     if not RAW_MODE:
-        # Process the lower case text for substitutions
-        sluggified = text.lower()
-        # replace all but alnum and spaces with empty string
-        lower_text = ''.join(char for char in sluggified if char.isalnum())
+        sluggified = "".join(char for char in text.lower() if char.isalnum())
 
-        for key, value in SUBS.items():
-            if lower_text == key:
-                print(f"Matched '{key}' in '{lower_text}' -> Replacing with '{value}'")
-                # Replace the matched key with its corresponding value
-                text = value
-                break
+        for key, value in MACROS.items():
+            if sluggified == key:
 
-    keyboard_controller.type(text)
+                if callable(value):
+                    # If the value is a callable function, execute it
+                    # This allows for special keys like 'up', 'down', etc.
+                    print(f"Matched '{key}' in '{sluggified}' -> Executing function")
+                    value()
+
+                    text = ""
+                else:
+                    print(
+                        f"Matched '{key}' in '{sluggified}' -> Replacing with '{value}'"
+                    )
+                    # Replace the matched key with its corresponding value
+                    text = value
+                    break
+
+    if text:
+        keyboard_controller.type(text)
 
 
 def main():
