@@ -4,12 +4,10 @@ import os
 import subprocess
 import requests
 import time
-from dotenv import load_dotenv
 from rich import print
 from rich.progress import Progress
 import numpy as np
 import sounddevice as sd
-from pynput import keyboard
 from scipy.io import wavfile
 from datetime import datetime
 import sys
@@ -20,9 +18,9 @@ from keyboard import keyboard_controller
 
 from macros import MACROS
 
-SERVER_HOST="http://localhost:4242"
+SERVER_HOST = "http://localhost:4242"
 MIN_SAMPLES_FOR_TRANSCRIBE = 8000
-VOICEKEY_DEFAULT = "shift_r" # + CTRL
+VOICEKEY_DEFAULT = "shift_r"  # + CTRL
 RAW_MODE = False
 
 
@@ -77,10 +75,7 @@ def process_typed(text):
 def main():
     global keyboard_controller
 
-    load_dotenv()
     RECORD_KEY = Key[VOICEKEY_DEFAULT]
-
-
 
     recording = False
     audio_data = []
