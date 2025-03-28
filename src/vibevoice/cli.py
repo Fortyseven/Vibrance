@@ -16,17 +16,21 @@ def start_whisper_server():
     process = subprocess.Popen(['python', server_script])
     return process
 
+
 def wait_for_server(timeout=1800, interval=0.5):
     start_time = time.time()
+
     while time.time() - start_time < timeout:
         try:
-            response = requests.get('http://localhost:4242/health')
+            response = requests.get("http://localhost:4242/health")
             if response.status_code == 200:
                 return True
         except requests.exceptions.RequestException:
             pass
         time.sleep(interval)
+
     raise TimeoutError("Server failed to start within timeout")
+
 
 def main():
     load_dotenv()
@@ -50,23 +54,25 @@ def main():
         if key == RECORD_KEY:
             recording = False
             print("Transcribing...")
-            
+
             try:
                 audio_data_np = np.concatenate(audio_data, axis=0)
             except ValueError as e:
                 print(e)
                 return
-            
-            recording_path = os.path.abspath('recording.wav')
+
+            recording_path = os.path.abspath("recording.wav")
             audio_data_int16 = (audio_data_np * np.iinfo(np.int16).max).astype(np.int16)
             wavfile.write(recording_path, sample_rate, audio_data_int16)
 
             try:
-                response = requests.post('http://localhost:4242/transcribe/', 
-                                      json={'file_path': recording_path})
+                response = requests.post(
+                    "http://localhost:4242/transcribe/",
+                    json={"file_path": recording_path},
+                )
                 response.raise_for_status()
-                transcript = response.json()['text']
-                
+                transcript = response.json()["text"]
+
                 if transcript:
                     processed_transcript = transcript + " "
                     print(processed_transcript)
@@ -83,7 +89,7 @@ def main():
             audio_data.append(indata.copy())
 
     server_process = start_whisper_server()
-    
+
     try:
         print(f"Waiting for the server to be ready...")
         wait_for_server()
@@ -99,6 +105,7 @@ def main():
         print("\nStopping...")
     finally:
         server_process.terminate()
+
 
 if __name__ == "__main__":
     main()

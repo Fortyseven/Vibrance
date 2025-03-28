@@ -9,14 +9,17 @@ app = FastAPI()
 
 model = WhisperModel("large", device="cuda", compute_type="float16")
 # Enable in case you want to run on CPU, but it's much slower
-#model = WhisperModel("medium", device="cpu", compute_type="int8")
+# model = WhisperModel("medium", device="cpu", compute_type="int8")
+
 
 class TranscribeRequest(BaseModel):
     file_path: str
 
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
 
 @app.post("/transcribe/")
 async def transcribe(request: TranscribeRequest):
@@ -24,8 +27,10 @@ async def transcribe(request: TranscribeRequest):
     text = " ".join([segment.text.strip() for segment in segments])
     return {"text": text}
 
+
 def run_server():
     uvicorn.run(app, host="0.0.0.0", port=4242)
+
 
 if __name__ == "__main__":
     run_server()
