@@ -11,6 +11,9 @@ from pynput.keyboard import Controller as KeyboardController, Key, Listener
 from scipy.io import wavfile
 import sys
 
+MIN_SAMPLES_FOR_TRANSCRIBE = 8000
+
+
 def start_whisper_server():
     server_script = os.path.join(os.path.dirname(__file__), 'server.py')
     process = subprocess.Popen(['python', server_script])
@@ -63,6 +66,12 @@ def main():
 
             recording_path = os.path.abspath("recording.wav")
             audio_data_int16 = (audio_data_np * np.iinfo(np.int16).max).astype(np.int16)
+
+            if audio_data_int16.shape[0] < MIN_SAMPLES_FOR_TRANSCRIBE:
+                # Ensure there's enough data for Whisper to process
+                print("Ignoring short response.")
+                return
+
             wavfile.write(recording_path, sample_rate, audio_data_int16)
 
             try:
