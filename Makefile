@@ -1,4 +1,4 @@
 # just for now
 
 run:
-	@python src/vibevoice/cli.py
+	@python src/app/cli.py
