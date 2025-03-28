@@ -12,7 +12,23 @@ from scipy.io import wavfile
 import sys
 
 MIN_SAMPLES_FOR_TRANSCRIBE = 8000
-VOICEKEY_DEFAULT = "alt_r"  # old default "ctrl_r"
+VOICEKEY_DEFAULT = "shift_r"  # old default "ctrl_r"
+RAW_MODE = False
+
+SUBS = {
+    'asterisk': '*',
+    'at sign': '@',
+    'space.': ' ',
+    'space bar': ' ',
+    'spacebar': ' ',
+    'enter': '\n',
+    'enter.': '\n',
+    'return': '\n',
+    'new line': '\n',
+    'backspace': chr(8),
+}
+
+keyboard_controller = None
 
 
 def start_whisper_server():
@@ -22,6 +38,7 @@ def start_whisper_server():
 
 
 def wait_for_server(timeout=1800, interval=0.5):
+    global keyboard_controller
     start_time = time.time()
 
     while time.time() - start_time < timeout:
@@ -36,26 +53,54 @@ def wait_for_server(timeout=1800, interval=0.5):
     raise TimeoutError("Server failed to start within timeout")
 
 
+def process_typed(text):
+    if not RAW_MODE:
+        # Process the lower case text for substitutions
+        lower_text = text.lower()
+        matched = False
+        for key, value in SUBS.items():
+            if lower_text == key:
+                print(f"Matched '{key}' in '{lower_text}' -> Replacing with '{value}'")
+                # Replace the matched key with its corresponding value
+                text = value
+                matched = True
+                break
+
+    keyboard_controller.type(text)
+
+
 def main():
+    global keyboard_controller
+
     load_dotenv()
     key_label = os.environ.get("VOICEKEY", VOICEKEY_DEFAULT)
     RECORD_KEY = Key[key_label]
 
+    keyboard_controller = KeyboardController()
+
     recording = False
     audio_data = []
     sample_rate = 16000
-    keyboard_controller = KeyboardController()
+
+    pressed_ctrl = False
 
     def on_press(key):
-        nonlocal recording, audio_data
-        if key == RECORD_KEY:
+        nonlocal recording, audio_data, pressed_ctrl
+
+        if key == Key.ctrl_r:
+            pressed_ctrl = True
+        elif key == RECORD_KEY and pressed_ctrl:
             recording = True
             audio_data = []
             print("Listening...")
 
     def on_release(key):
-        nonlocal recording, audio_data
-        if key == RECORD_KEY:
+        nonlocal recording, audio_data, pressed_ctrl
+
+        if key == Key.ctrl_r:
+            pressed_ctrl = False
+
+        if key == RECORD_KEY and recording:
             recording = False
             print("Transcribing...")
 
@@ -84,9 +129,10 @@ def main():
                 transcript = response.json()["text"]
 
                 if transcript:
-                    processed_transcript = transcript + " "
-                    print(processed_transcript)
-                    keyboard_controller.type(processed_transcript)
+                    processed_transcript = transcript # + " "
+                    print(f'>>> "{processed_transcript}"')
+                    process_typed(processed_transcript)
+
             except requests.exceptions.RequestException as e:
                 print(f"Error sending request to local API: {e}")
             except Exception as e:
