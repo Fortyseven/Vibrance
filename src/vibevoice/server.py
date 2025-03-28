@@ -5,6 +5,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from faster_whisper import WhisperModel
 
+HOST = "0.0.0.0"
+PORT = 4242
+
 app = FastAPI()
 
 model = WhisperModel("large", device="cuda", compute_type="float16")
@@ -29,7 +32,7 @@ async def transcribe(request: TranscribeRequest):
 
 
 def run_server():
-    uvicorn.run(app, host="0.0.0.0", port=4242)
+    uvicorn.run(app, host=HOST, port=PORT)
 
 
 if __name__ == "__main__":
