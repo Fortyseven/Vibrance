@@ -12,3 +12,4 @@ numpy>=1.26.0
 requests==2.32.3
 pynput==1.7.6
 scipy==1.11.3
+rich

@@ -1,5 +1,7 @@
 """Command-line interface for vibevoice"""
 
+from rich import print
+from rich.progress import Progress
 import os
 import subprocess
 import time
@@ -81,25 +83,40 @@ def main():
 
     pressed_ctrl = False
 
+    progress = Progress()
+    progress_current = None
+
     def on_press(key):
-        nonlocal recording, audio_data, pressed_ctrl
+        nonlocal recording, audio_data, pressed_ctrl, progress_current
 
         if key == Key.ctrl_r:
             pressed_ctrl = True
         elif key == RECORD_KEY and pressed_ctrl:
             recording = True
             audio_data = []
-            print("Listening...")
+
+            progress.start()
+            progress_current = progress.add_task(
+                "[green bold]Recording...[/bold green]", total=None
+            )
+            progress.start_task(progress_current)
 
     def on_release(key):
-        nonlocal recording, audio_data, pressed_ctrl
+        nonlocal recording, audio_data, pressed_ctrl, progress_current
 
         if key == Key.ctrl_r:
             pressed_ctrl = False
 
         if key == RECORD_KEY and recording:
             recording = False
-            print("Transcribing...")
+            progress.stop_task(progress_current)
+            progress.remove_task(progress_current)
+
+            print("\r", end="")
+
+            progress_current = progress.add_task(
+                "[yellow bold]Transcribing...[/bold yellow]", total=None
+            )
 
             try:
                 audio_data_np = np.concatenate(audio_data, axis=0)
@@ -112,7 +129,9 @@ def main():
 
             if audio_data_int16.shape[0] < MIN_SAMPLES_FOR_TRANSCRIBE:
                 # Ensure there's enough data for Whisper to process
-                print("Ignoring short response.")
+                print("[yellow]>>> (Ignoring short response.)[/yellow]")
+                progress.remove_task(progress_current)
+                progress.stop()
                 return
 
             wavfile.write(recording_path, sample_rate, audio_data_int16)
@@ -126,14 +145,21 @@ def main():
                 transcript = response.json()["text"]
 
                 if transcript:
-                    processed_transcript = transcript # + " "
-                    print(f'>>> "{processed_transcript}"')
+                    processed_transcript = transcript  # + " "
+                    print(
+                        f'[yellow bold]>>>[/bold yellow] [white bold]"{processed_transcript}"[/bold white]'
+                    )
                     process_typed(processed_transcript)
 
             except requests.exceptions.RequestException as e:
-                print(f"Error sending request to local API: {e}")
+                print(f"[red]Error sending request to local API:[/red] {e}")
             except Exception as e:
-                print(f"Error processing transcript: {e}")
+                print(f"[red]Error processing transcript:[/red] {e}")
+            finally:
+                progress.remove_task(progress_current)
+                progress.stop()
+
+                print("\r" + " " * 15, end="\r")  # Clear the line to avoid overlap
 
     def callback(indata, frames, time, status):
         if status:
@@ -144,18 +170,20 @@ def main():
     server_process = start_whisper_server()
 
     try:
-        print(f"Waiting for the server to be ready...")
+        print(f"[yellow]Waiting for the server to be ready...[/yellow]")
         wait_for_server()
-        print(f"vibevoice is active. Hold down {key_label} to start dictating.")
+        print(
+            f"[green]Transcriber is active. Hold down CTRL+SHIFT to start dictating.[/green]"
+        )
         with Listener(on_press=on_press, on_release=on_release) as listener:
             with sd.InputStream(callback=callback, channels=1, samplerate=sample_rate):
                 listener.join()
     except TimeoutError as e:
-        print(f"Error: {e}")
+        print(f"[red]Error: {e}[/red]")
         server_process.terminate()
         sys.exit(1)
     except KeyboardInterrupt:
-        print("\nStopping...")
+        print("\n[yellow]Stopping...[/yellow]")
     finally:
         server_process.terminate()
 
