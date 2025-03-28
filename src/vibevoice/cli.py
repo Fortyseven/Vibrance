@@ -16,7 +16,7 @@ from datetime import datetime
 import sys
 
 MIN_SAMPLES_FOR_TRANSCRIBE = 8000
-VOICEKEY_DEFAULT = "shift_r"  # old default "ctrl_r"
+VOICEKEY_DEFAULT = "shift_r" # + CTRL
 RAW_MODE = False
 
 keyboard_controller = None
@@ -36,8 +36,8 @@ def tap_undo():
 
 def tab_ctrlenter():
     keyboard_controller.press(Key.ctrl),
-    keyboard_controller.press(Key.enter),  # Simulate pressing Enter
-    keyboard_controller.release(Key.enter),  # Release Enter
+    keyboard_controller.press(Key.enter),
+    keyboard_controller.release(Key.enter),
     keyboard_controller.release(Key.ctrl)
 
 
@@ -45,6 +45,14 @@ def type_todays_date():
     today = datetime.now().strftime("%Y-%m-%d")
     keyboard_controller.type(today)
 
+def type_current_time():
+    current_time = datetime.now().strftime("%-I:%M%p").lower()
+    keyboard_controller.type(current_time)
+
+def type_current_time_and_date():
+    type_todays_date()
+    keyboard_controller.type(" @ ")
+    type_current_time()  #
 
 MACROS = {
     "asterisk": "*",
@@ -78,6 +86,8 @@ MACROS = {
     "underscore": "_",
     # More advanced macros
     "todaysdate": lambda: type_todays_date(),
+    "currenttime": lambda: type_current_time_and_date(),
+    "currenttimeanddate": lambda: type_current_time_and_date(),
 }
 
 
