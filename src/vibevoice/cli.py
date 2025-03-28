@@ -82,16 +82,20 @@ def main():
     sample_rate = 16000
 
     pressed_ctrl = False
+    pressed_shift = False
 
     progress = Progress()
     progress_current = None
 
     def on_press(key):
-        nonlocal recording, audio_data, pressed_ctrl, progress_current
+        nonlocal recording, audio_data, pressed_ctrl, pressed_shift, progress_current
 
         if key == Key.ctrl_r:
             pressed_ctrl = True
-        elif key == RECORD_KEY and pressed_ctrl:
+        if key == Key.shift_r:
+            pressed_shift = True
+
+        if pressed_ctrl and pressed_shift:
             recording = True
             audio_data = []
 
@@ -102,12 +106,14 @@ def main():
             progress.start_task(progress_current)
 
     def on_release(key):
-        nonlocal recording, audio_data, pressed_ctrl, progress_current
+        nonlocal recording, audio_data, pressed_shift, pressed_ctrl, progress_current
 
         if key == Key.ctrl_r:
             pressed_ctrl = False
+        if key == Key.shift_r:
+            pressed_shift = False
 
-        if key == RECORD_KEY and recording:
+        if key == RECORD_KEY and (pressed_shift == False or pressed_ctrl == False):
             recording = False
             progress.stop_task(progress_current)
             progress.remove_task(progress_current)
