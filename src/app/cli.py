@@ -25,7 +25,7 @@ RAW_MODE = False
 
 
 def start_whisper_server():
-    server_script = os.path.join(os.path.dirname(__file__), "server.py")
+    server_script = os.path.join(os.path.dirname(__file__), "server/server.py")
     process = subprocess.Popen(["python", server_script])
     return process
 
