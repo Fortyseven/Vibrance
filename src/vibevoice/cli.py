@@ -12,6 +12,7 @@ from scipy.io import wavfile
 import sys
 
 MIN_SAMPLES_FOR_TRANSCRIBE = 8000
+VOICEKEY_DEFAULT = "alt_r"  # old default "ctrl_r"
 
 
 def start_whisper_server():
@@ -37,7 +38,7 @@ def wait_for_server(timeout=1800, interval=0.5):
 
 def main():
     load_dotenv()
-    key_label = os.environ.get("VOICEKEY", "ctrl_r")
+    key_label = os.environ.get("VOICEKEY", VOICEKEY_DEFAULT)
     RECORD_KEY = Key[key_label]
 
     recording = False
