@@ -12,6 +12,7 @@ import requests
 from pynput.keyboard import Controller as KeyboardController, Key, Listener
 from pynput import keyboard
 from scipy.io import wavfile
+from datetime import datetime
 import sys
 
 MIN_SAMPLES_FOR_TRANSCRIBE = 8000
@@ -33,10 +34,23 @@ def tap_undo():
     keyboard_controller.release(Key.ctrl)
 
 
+def tab_ctrlenter():
+    keyboard_controller.press(Key.ctrl),
+    keyboard_controller.press(Key.enter),  # Simulate pressing Enter
+    keyboard_controller.release(Key.enter),  # Release Enter
+    keyboard_controller.release(Key.ctrl)
+
+
+def type_todays_date():
+    today = datetime.now().strftime("%Y-%m-%d")
+    keyboard_controller.type(today)
+
+
 MACROS = {
     "asterisk": "*",
     "atsign": "@",
     "spacebar": " ",
+    "space": " ",
     "enter": "\n",
     "return": "\n",
     "newline": "\n",
@@ -52,6 +66,7 @@ MACROS = {
     "pageup": lambda: tap_key(Key.page_up),
     "backspace": lambda: tap_key(Key.backspace),
     "undo": lambda: tap_undo(),
+    "controlenter": lambda: tab_ctrlenter(),
     # Common punctuation and symbols
     "exclamationpoint": "!",
     "questionmark": "?",
@@ -61,6 +76,8 @@ MACROS = {
     "colon": ":",
     "dash": "-",
     "underscore": "_",
+    # More advanced macros
+    "todaysdate": lambda: type_todays_date(),
 }
 
 
