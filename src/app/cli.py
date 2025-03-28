@@ -170,8 +170,6 @@ def main():
                 progress_current = None
                 progress.stop()
 
-                print("\r" + " " * 15, end="\r")  # Clear the line to avoid overlap
-
     def callback(indata, frames, time, status):
         if status:
             print(status)
