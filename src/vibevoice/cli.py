@@ -17,15 +17,11 @@ RAW_MODE = False
 
 SUBS = {
     'asterisk': '*',
-    'at sign': '@',
-    'space.': ' ',
-    'space bar': ' ',
+    'atsign': '@',
     'spacebar': ' ',
     'enter': '\n',
-    'enter.': '\n',
     'return': '\n',
-    'new line': '\n',
-    'backspace': chr(8),
+    'newline': '\n',
 }
 
 keyboard_controller = None
@@ -56,14 +52,15 @@ def wait_for_server(timeout=1800, interval=0.5):
 def process_typed(text):
     if not RAW_MODE:
         # Process the lower case text for substitutions
-        lower_text = text.lower()
-        matched = False
+        sluggified = text.lower()
+        # replace all but alnum and spaces with empty string
+        lower_text = ''.join(char for char in sluggified if char.isalnum())
+
         for key, value in SUBS.items():
             if lower_text == key:
                 print(f"Matched '{key}' in '{lower_text}' -> Replacing with '{value}'")
                 # Replace the matched key with its corresponding value
                 text = value
-                matched = True
                 break
 
     keyboard_controller.type(text)
