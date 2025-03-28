@@ -99,6 +99,10 @@ def main():
             recording = True
             audio_data = []
 
+            if progress_current is not None:
+                progress.stop()
+                progress.remove_task(progress_current)
+
             progress.start()
             progress_current = progress.add_task(
                 "[green bold]Recording...[/bold green]", total=None
@@ -163,6 +167,7 @@ def main():
                 print(f"[red]Error processing transcript:[/red] {e}")
             finally:
                 progress.remove_task(progress_current)
+                progress_current = None
                 progress.stop()
 
                 print("\r" + " " * 15, end="\r")  # Clear the line to avoid overlap
