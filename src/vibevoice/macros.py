@@ -1,7 +1,9 @@
 import time
 from pynput.keyboard import Controller as KeyboardController, Key, Listener
+
 # from pynput import keyboard
 from keyboard import keyboard_controller
+
 
 def tap_key(key):
     keyboard_controller.press(key)
@@ -14,19 +16,23 @@ def tap_undo():
     keyboard_controller.release("z")
     keyboard_controller.release(Key.ctrl)
 
+
 def tab_ctrlenter():
     keyboard_controller.press(Key.ctrl),
     keyboard_controller.press(Key.enter),
     keyboard_controller.release(Key.enter),
     keyboard_controller.release(Key.ctrl)
 
+
 def type_todays_date():
     today = datetime.now().strftime("%Y-%m-%d")
     keyboard_controller.type(today)
 
+
 def type_current_time():
     current_time = datetime.now().strftime("%-I:%M%p").lower()
     keyboard_controller.type(current_time)
+
 
 def type_current_time_and_date():
     type_todays_date()
@@ -42,6 +48,7 @@ def tap_back_one_word():
     keyboard_controller.release(Key.left)
     keyboard_controller.release(Key.shift)
     keyboard_controller.release(Key.ctrl)
+
 
 def tap_delete():
     tap_key(Key.delete)
@@ -60,6 +67,7 @@ def type_delete_words(n):
 
         # Optionally, you can add a small delay here if needed
         time.sleep(0.1)  # Adjust as necessary for your use case
+
 
 MACROS = {
     "asterisk": "*",
@@ -97,7 +105,6 @@ MACROS = {
     "todaysdate": lambda: type_todays_date(),
     "currenttime": lambda: type_current_time_and_date(),
     "currenttimeanddate": lambda: type_current_time_and_date(),
-
     # emoji
     "happyface": " :)",
     "sadface": " :(",
@@ -106,5 +113,5 @@ MACROS = {
 }
 
 MACRO_COMPLEX = {
-    "delete#words": lambda n : type_delete_words(n),
+    "delete#words": lambda n: type_delete_words(n),
 }
