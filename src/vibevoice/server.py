@@ -32,7 +32,7 @@ async def transcribe(request: TranscribeRequest):
 
 
 def run_server():
-    uvicorn.run(app, host=HOST, port=PORT)
+    uvicorn.run(app, host=HOST, port=PORT, log_level="error")
 
 
 if __name__ == "__main__":
