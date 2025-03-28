@@ -116,8 +116,7 @@ def main():
     global keyboard_controller
 
     load_dotenv()
-    key_label = os.environ.get("VOICEKEY", VOICEKEY_DEFAULT)
-    RECORD_KEY = Key[key_label]
+    RECORD_KEY = Key[VOICEKEY_DEFAULT]
 
     keyboard_controller = KeyboardController()
 
