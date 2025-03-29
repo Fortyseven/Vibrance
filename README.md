@@ -1,6 +1,6 @@
 # Vibrance
 
-[Demo](https://github.com/user-attachments/assets/1d989be6-9f00-4b2a-b5c0-240a554bc1ae)
+[Demo w/ Audio](https://github.com/user-attachments/assets/1d989be6-9f00-4b2a-b5c0-240a554bc1ae)
 
 
 This is a personal fork of https://github.com/mpaepper/vibevoice. It's designed to fit my use case, versus being user-friendly.
