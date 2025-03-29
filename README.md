@@ -1,6 +1,6 @@
 # Vibrance
 
-<video src="docs/demo.mp4"/>
+<video src="docs/demo.mp4"></video>
 
 This is a personal fork of https://github.com/mpaepper/vibevoice. It's designed to fit my use case, versus being user-friendly.
 
