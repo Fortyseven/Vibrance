@@ -27,11 +27,13 @@ RAW_MODE = False
 def start_whisper_server():
     server_script = os.path.join(os.path.dirname(__file__), "server/server.py")
     process = subprocess.Popen(["python", server_script])
+
     return process
 
 
 def wait_for_server(timeout=1800, interval=0.5):
     global keyboard_controller
+
     start_time = time.time()
 
     while time.time() - start_time < timeout:
@@ -92,6 +94,7 @@ def main():
 
         if key == Key.ctrl_r:
             pressed_ctrl = True
+
         if key == Key.shift_r:
             pressed_shift = True
 
@@ -114,6 +117,7 @@ def main():
 
         if key == Key.ctrl_r:
             pressed_ctrl = False
+
         if key == Key.shift_r:
             pressed_shift = False
 
