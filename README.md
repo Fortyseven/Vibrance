@@ -1,6 +1,6 @@
 # Vibrance
 
-https://github.com/Fortyseven/Vibrance/raw/refs/heads/main/docs/demo.mp4
+https://github.com/user-attachments/assets/521996e7-4518-4ad6-8de2-5807b3c5efd5
 
 This is a personal fork of https://github.com/mpaepper/vibevoice. It's designed to fit my use case, versus being user-friendly.
 
