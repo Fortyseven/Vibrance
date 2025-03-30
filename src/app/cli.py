@@ -121,7 +121,8 @@ def main():
         if key == Key.shift_r:
             pressed_shift = False
 
-        if key == RECORD_KEY and (pressed_shift == False or pressed_ctrl == False):
+
+        if recording and (pressed_shift == False and pressed_ctrl == False):
             recording = False
             progress.stop_task(progress_current)
             progress.remove_task(progress_current)
