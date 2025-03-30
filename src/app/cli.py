@@ -11,6 +11,7 @@ import sounddevice as sd
 from scipy.io import wavfile
 from datetime import datetime
 import sys
+import argparse
 
 from pynput.keyboard import Controller as KeyboardController, Key, Listener
 
@@ -18,10 +19,27 @@ from keyboard import keyboard_controller
 
 from macros import MACROS
 
-SERVER_HOST = "http://localhost:4242"
 MIN_SAMPLES_FOR_TRANSCRIBE = 8000
 VOICEKEY_DEFAULT = "shift_r"  # + CTRL
 RAW_MODE = False
+
+DEFAULT_HOST = "http://localhost"
+DEFAULT_PORT = 4242
+SERVER_HOST = f"{DEFAULT_HOST}:{DEFAULT_PORT}"
+
+
+def parse_arguments():
+    """
+    Parses command-line arguments for the CLI.
+
+    Returns:
+        argparse.Namespace: Parsed arguments.
+    """
+    parser = argparse.ArgumentParser(description="Command-line interface for vibevoice")
+    parser.add_argument("--host", type=str, default=DEFAULT_HOST, help="Server host")
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Server port")
+    parser.add_argument("--raw-mode", action="store_true", help="Enable raw mode")
+    return parser.parse_args()
 
 
 def start_whisper_server():
@@ -105,7 +123,11 @@ def process_typed(text):
 
 
 def main():
-    global keyboard_controller
+    global keyboard_controller, SERVER_HOST, RAW_MODE
+
+    args = parse_arguments()
+    SERVER_HOST = f"{args.host}:{args.port}"
+    RAW_MODE = args.raw_mode
 
     RECORD_KEY = Key[VOICEKEY_DEFAULT]
 
