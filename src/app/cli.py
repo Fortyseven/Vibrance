@@ -39,6 +39,7 @@ def parse_arguments():
     parser.add_argument("--host", type=str, default=DEFAULT_HOST, help="Server host")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Server port")
     parser.add_argument("--raw-mode", action="store_true", help="Enable raw mode")
+    parser.add_argument("--no-space", "-ns", action="store_true", help="Disable adding a space after transcriptions")
     return parser.parse_args()
 
 
@@ -128,6 +129,7 @@ def main():
     args = parse_arguments()
     SERVER_HOST = f"{args.host}:{args.port}"
     RAW_MODE = args.raw_mode
+    add_space = not args.no_space
 
     RECORD_KEY = Key[VOICEKEY_DEFAULT]
 
@@ -231,7 +233,9 @@ def main():
                 transcript = response.json()["text"]
 
                 if transcript:
-                    processed_transcript = transcript  # + " "
+                    processed_transcript = transcript
+                    if add_space:
+                        processed_transcript += " "
                     print(
                         f'[yellow bold]>>>[/bold yellow] [white bold]"{processed_transcript}"[/bold white]'
                     )
