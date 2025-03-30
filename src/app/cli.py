@@ -145,15 +145,9 @@ def main():
             recording = True
             audio_data = []
 
-            if progress_current is not None:
-                progress.stop()
-                progress.remove_task(progress_current)
+            stop_progress()
 
-            progress.start()
-            progress_current = progress.add_task(
-                "[green bold]Recording...[/bold green]", total=None
-            )
-            progress.start_task(progress_current)
+            start_progress("[green bold]Recording...[/bold green]")
 
     def on_release(key):
         """
@@ -184,14 +178,8 @@ def main():
 
         if recording and (pressed_shift == False and pressed_ctrl == False):
             recording = False
-            progress.stop_task(progress_current)
-            progress.remove_task(progress_current)
 
-            print("\r", end="")
-
-            progress_current = progress.add_task(
-                "[yellow bold]Transcribing...[/bold yellow]", total=None
-            )
+            stop_progress()
 
             try:
                 audio_data_np = np.concatenate(audio_data, axis=0)
@@ -205,13 +193,14 @@ def main():
             if audio_data_int16.shape[0] < MIN_SAMPLES_FOR_TRANSCRIBE:
                 # Ensure there's enough data for Whisper to process
                 print("[yellow]>>> (Ignoring short response.)[/yellow]")
-                progress.remove_task(progress_current)
-                progress.stop()
+                stop_progress()
                 return
 
             wavfile.write(recording_path, sample_rate, audio_data_int16)
 
             try:
+                start_progress("[yellow bold]Transcribing...[/bold yellow]")
+
                 response = requests.post(
                     f"{SERVER_HOST}/transcribe",
                     json={"file_path": recording_path},
@@ -231,9 +220,31 @@ def main():
             except Exception as e:
                 print(f"[red]Error processing transcript:[/red] {e}")
             finally:
-                progress.remove_task(progress_current)
-                progress_current = None
-                progress.stop()
+                stop_progress()
+                pressed_shift = False
+                pressed_ctrl = False
+
+
+    def stop_progress():
+        nonlocal progress_current
+
+        if progress_current:
+            progress.remove_task(progress_current)
+            progress.stop()
+
+        progress_current = None
+        print("\r", end="")
+
+    def start_progress(label: str):
+        nonlocal progress_current
+
+        if progress_current:
+            progress.remove_task(progress_current)
+            progress.stop()
+
+        progress.start()
+        progress_current = progress.add_task(label, total=None)
+        # progress.start_task(progress_current)
 
     def callback(indata, frames, time, status):
         if status:
