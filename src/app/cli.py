@@ -32,6 +32,20 @@ def start_whisper_server():
 
 
 def wait_for_server(timeout=1800, interval=0.5):
+    """
+    Waits for a server to become available by periodically sending a health check request.
+
+    Args:
+        timeout (int, optional): The maximum time to wait for the server to start, in seconds. Defaults to 1800 seconds (30 minutes).
+        interval (float, optional): The time interval between consecutive health check requests, in seconds. Defaults to 0.5 seconds.
+
+    Returns:
+        bool: True if the server becomes available within the timeout period.
+
+    Raises:
+        TimeoutError: If the server does not become available within the specified timeout period.
+    """
+
     global keyboard_controller
 
     start_time = time.time()
@@ -49,6 +63,22 @@ def wait_for_server(timeout=1800, interval=0.5):
 
 
 def process_typed(text):
+    """
+    Processes the given text input, applying transformations or executing macros
+    based on predefined rules.
+    Args:
+        text (str): The input text to be processed.
+    Behavior:
+        - If RAW_MODE is disabled:
+            - Converts the input text to lowercase and removes non-alphanumeric characters.
+            - Checks if the processed text matches any key in the MACROS dictionary.
+            - If a match is found:
+                - If the corresponding value is callable, executes the function and clears the text.
+                - Otherwise, replaces the text with the corresponding value from the MACROS dictionary.
+        - If RAW_MODE is enabled or no match is found, the original or modified text is typed using
+          the `keyboard_controller`.
+    """
+
     if not RAW_MODE:
         sluggified = "".join(char for char in text.lower() if char.isalnum())
 
@@ -90,7 +120,20 @@ def main():
     progress_current = None
 
     def on_press(key):
-        nonlocal recording, audio_data, pressed_ctrl, pressed_shift, progress_current
+        """
+        Handles key press events to control the recording process.
+        This function listens for specific key combinations and updates the state
+        of the recording process. It checks for the right control key (`Key.ctrl_r`)
+        and the right shift key (`Key.shift_r`). When both keys are pressed
+        simultaneously, it starts recording by setting the `recording` flag to True,
+        initializes the `audio_data` list, stops any ongoing progress display, and
+        starts a new progress display indicating that recording is in progress.
+
+        Args:
+            key: The key event object representing the key that was pressed.
+        """
+
+        nonlocal recording, audio_data, pressed_ctrl, pressed_shift
 
         if key == Key.ctrl_r:
             pressed_ctrl = True
@@ -113,7 +156,24 @@ def main():
             progress.start_task(progress_current)
 
     def on_release(key):
-        nonlocal recording, audio_data, pressed_shift, pressed_ctrl, progress_current
+        """
+        Handles the release of keyboard keys during the recording process.
+
+        This function is triggered when a key is released and performs the following:
+        - Updates the state of `pressed_ctrl` and `pressed_shift` when the respective keys are released.
+        - Stops the recording process if the `RECORD_KEY` is released without both `pressed_shift` and `pressed_ctrl` being active.
+        - Processes the recorded audio data, saves it as a WAV file, and sends it to a transcription server.
+        - Handles transcription responses and processes the resulting text.
+
+        Args:
+            key: The key that was released.
+
+        Notes:
+            - The function uses nonlocal variables: `recording`, `audio_data`, `pressed_shift`, and `pressed_ctrl`.
+            - Ensures that the recorded audio has a minimum length before attempting transcription.
+            - Handles exceptions during audio processing and transcription requests gracefully.
+        """
+        nonlocal recording, audio_data, pressed_shift, pressed_ctrl
 
         if key == Key.ctrl_r:
             pressed_ctrl = False
