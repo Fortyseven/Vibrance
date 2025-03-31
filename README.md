@@ -7,6 +7,8 @@ This is a personal fork of https://github.com/mpaepper/vibevoice. It's designed 
 
 It uses the right-hand CTRL+SHIFT combo as the push-to-talk trigger. You can change this to whatever you want, but you'll have to rig it up.
 
+This is incredibly slow if you use CPU.
+
 ## Features added
 
 - Easily extensible one-word or phrase macros, such as "today's date", and simple voice-controlled keyboard inputs.
