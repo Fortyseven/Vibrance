@@ -12,6 +12,7 @@ This is incredibly slow if you use CPU.
 ## Features added
 
 - Easily extensible one-word or phrase macros, such as "today's date", and simple voice-controlled keyboard inputs.
+- Adds LLM and code generation modes (e.g. `--mode code` on launch) for use with a default Ollama installation
 
 ## Fixed stuff
 
