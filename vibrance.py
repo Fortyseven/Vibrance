@@ -14,9 +14,8 @@ import argparse
 
 from pynput.keyboard import Controller as KeyboardController, Key, Listener
 
-from keyboard import keyboard_controller
-
-from macros import MACROS
+from app.keyboard import keyboard_controller
+from app.macros import MACROS
 
 MIN_SAMPLES_FOR_TRANSCRIBE = 8000
 VOICEKEY_DEFAULT = "shift_r"  # + CTRL
@@ -60,7 +59,7 @@ def parse_arguments():
 
 
 def start_whisper_server(cpu=False):
-    server_script = os.path.join(os.path.dirname(__file__), "server/server.py")
+    server_script = os.path.join(os.path.dirname(__file__), "app/server/server.py")
     command = ["python", server_script]
     if cpu:
         command.append("--cpu")

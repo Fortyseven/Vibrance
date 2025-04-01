@@ -2,7 +2,7 @@ import time
 from pynput.keyboard import Controller as KeyboardController, Key, Listener
 
 from datetime import datetime
-from keyboard import keyboard_controller
+from app.keyboard import keyboard_controller
 
 
 def tap_key(key):
