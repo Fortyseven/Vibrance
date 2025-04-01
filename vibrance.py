@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Command-line interface for vibevoice"""
 
 import os
