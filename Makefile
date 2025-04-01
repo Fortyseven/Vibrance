@@ -1,4 +1,4 @@
 # just for now
 
 run:
-	@python src/app/cli.py
+	@python src/app/vibrance.py

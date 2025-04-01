@@ -25,6 +25,12 @@ DEFAULT_HOST = "http://localhost"
 DEFAULT_PORT = 4242
 SERVER_HOST = f"{DEFAULT_HOST}:{DEFAULT_PORT}"
 
+MODE_WELCOME = {
+    "default": "[yellow]=== (Default mode)[/yellow]",
+    "code": "[yellow]=== (Code mode)[/yellow]",
+    "raw": "[yellow]=== (Raw mode)[/yellow]",
+}
+
 
 def parse_arguments():
     """
@@ -94,12 +100,12 @@ def wait_for_server(timeout=1800, interval=0.5):
     raise TimeoutError("Server failed to start within timeout")
 
 
-def process_typed(text, args):
+def process_typed(dictated_text, args):
     """
     Processes the given text input, applying transformations or executing macros
     based on predefined rules.
     Args:
-        text (str): The input text to be processed.
+        dictated_text (str): The input text to be processed.
         args (argparse.Namespace): Parsed command-line arguments.
     Behavior:
         - If mode is "raw":
@@ -115,7 +121,7 @@ def process_typed(text, args):
     """
 
     if args.mode == "default":
-        sluggified = "".join(char for char in text.lower() if char.isalnum())
+        sluggified = "".join(char for char in dictated_text.lower() if char.isalnum())
 
         for key, value in MACROS.items():
             if sluggified == key:
@@ -126,27 +132,28 @@ def process_typed(text, args):
                     print(f"Matched '{key}' in '{sluggified}' -> Executing function")
                     value()
 
-                    text = ""
+                    dictated_text = ""
                 else:
                     print(
                         f"Matched '{key}' in '{sluggified}' -> Replacing with '{value}'"
                     )
                     # Replace the matched key with its corresponding value
-                    text = value
+                    dictated_text = value
                     break
 
     elif args.mode == "code":
         # Stub for code mode functionality
         print("[blue]Code mode is not yet implemented.[/blue]")
 
-    if text:
-        keyboard_controller.type(text)
+    if dictated_text:
+        keyboard_controller.type(dictated_text)
 
 
 def main():
     global keyboard_controller, SERVER_HOST
 
     args = parse_arguments()
+
     SERVER_HOST = f"{args.host}:{args.port}"
     add_space = not args.no_space
 
@@ -298,7 +305,10 @@ def main():
 
     try:
         print(f"[yellow]Waiting for the server to be ready...[/yellow]")
+
         wait_for_server()
+
+        print(MODE_WELCOME[args.mode])
         print(
             f"[green]Transcriber is active. Hold down CTRL+SHIFT to start dictating.[/green]"
         )
