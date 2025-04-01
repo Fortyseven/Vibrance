@@ -237,8 +237,8 @@ def main():
 
             if audio_data_int16.shape[0] < MIN_SAMPLES_FOR_TRANSCRIBE:
                 # Ensure there's enough data for Whisper to process
-                print("[yellow]>>> (Ignoring short response.)[/yellow]")
                 stop_progress()
+                print("[yellow]>>> (Ignoring short response.)[/yellow]", end="")
                 return
 
             wavfile.write(recording_path, sample_rate, audio_data_int16)
@@ -274,13 +274,11 @@ def main():
     def stop_progress():
         nonlocal progress_current
 
-        if progress_current:
-            print("stopping progress", progress_current)
+        if progress_current is not None:
             progress.remove_task(progress_current)
             progress.stop()
 
         progress_current = None
-        print("\r", end="")
 
     def start_progress(label: str):
         nonlocal progress_current
@@ -288,12 +286,13 @@ def main():
         stop_progress()
 
         progress.start()
+
         progress_current = progress.add_task(label, total=None)
-        # progress.start_task(progress_current)
 
     def input_stream_callback(indata, frames, time, status):
         if status:
-            print(status)
+            # print(status)
+            pass
         if recording:
             audio_data.append(indata.copy())
 
