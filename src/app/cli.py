@@ -84,7 +84,7 @@ def wait_for_server(timeout=1800, interval=0.5):
 
     while time.time() - start_time < timeout:
         try:
-            response = requests.get(f"{SERVER_HOST}/health")
+            response = requests.get(f"{SERVER_HOST}/health", timeout=5)
             if response.status_code == 200:
                 return True
         except requests.exceptions.RequestException:
