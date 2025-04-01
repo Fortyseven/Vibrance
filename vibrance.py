@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 
-"""Command-line interface for vibevoice"""
-
 import os
 import subprocess
 import requests
 import time
 from rich import print
 from rich.progress import Progress
+from rich.console import Console
+from rich.text import Text
 import numpy as np
 import sounddevice as sd
 from scipy.io import wavfile
 import sys
 import argparse
+from datetime import datetime
 
 from pynput.keyboard import Controller as KeyboardController, Key, Listener
 
@@ -25,6 +26,11 @@ VOICEKEY_DEFAULT = "shift_r"  # + CTRL
 DEFAULT_HOST = "http://localhost"
 DEFAULT_PORT = 4242
 SERVER_HOST = f"{DEFAULT_HOST}:{DEFAULT_PORT}"
+
+ANSI_CURSOR_OFF = "\x1b[?25l"
+ANSI_CURSOR_ON = "\x1b[?25h"
+ANSI_RESET_HOME = "\x1b[H"
+
 
 MODE_WELCOME = {
     "default": "[yellow]=== (Default mode)[/yellow]",
@@ -186,8 +192,40 @@ def process_typed(
         keyboard_controller.type(dictated_text)
 
 
+def display_banner():
+    """
+    Displays a banner with the word 'Vibrance', where each line rotates in color.
+    Only activates as an easter egg on April 1st.
+    """
+    if datetime.now().month == 4 and datetime.now().day == 1:  # Check if it's April 1st
+        console = Console()
+        console.clear()
+        banner_lines = [
+            "██    ██ ██  ██████  ██████   █████  ███    ██   ████  ███████",
+            "██    ██          ██      ██      ██ ████   ██ ██",
+            "██    ██ ██  ██████  ██████  ███████ ██ ██  ██ ██      █████",
+            " ██  ██  ██  ██   ██ ██   ██ ██   ██ ██  ██ ██ ██      ██",
+            "  ████   ██  ██████  ██   ██ ██   ██ ██   ████   ████  ███████",
+        ]
+        colors = ["red", "yellow", "green", "cyan", "blue", "magenta"]
+
+        __builtins__.print(ANSI_CURSOR_OFF, end="")
+
+        for _ in range(18):
+            __builtins__.print(ANSI_RESET_HOME, end="")
+
+            for i, line in enumerate(banner_lines):
+                color = colors[(i + _) % len(colors)]  # Rotate colors for each line
+                console.print(Text(line, style=color))
+            time.sleep(0.1)
+
+        __builtins__.print(ANSI_CURSOR_ON, end="")
+
+
 def main():
     global keyboard_controller, SERVER_HOST
+
+    display_banner()  # Display the banner only if it's April 1st
 
     args = parse_arguments()
 
