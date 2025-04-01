@@ -310,12 +310,14 @@ def main():
                 listener.join()
     except TimeoutError as e:
         print(f"[red]Error: {e}[/red]")
-        server_process.terminate()
         sys.exit(1)
     except KeyboardInterrupt:
         print("\n[yellow]Stopping...[/yellow]")
     finally:
-        server_process.terminate()
+        if server_process:
+            server_process.terminate()
+            server_process.wait()  # Ensure the process is fully terminated
+        print("[green]Cleanup completed. Exiting...[/green]")
 
 
 if __name__ == "__main__":
