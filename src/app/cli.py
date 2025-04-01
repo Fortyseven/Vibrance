@@ -9,7 +9,6 @@ from rich.progress import Progress
 import numpy as np
 import sounddevice as sd
 from scipy.io import wavfile
-from datetime import datetime
 import sys
 import argparse
 
@@ -21,7 +20,6 @@ from macros import MACROS
 
 MIN_SAMPLES_FOR_TRANSCRIBE = 8000
 VOICEKEY_DEFAULT = "shift_r"  # + CTRL
-RAW_MODE = False
 
 DEFAULT_HOST = "http://localhost"
 DEFAULT_PORT = 4242
@@ -38,14 +36,29 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Command-line interface for vibevoice")
     parser.add_argument("--host", type=str, default=DEFAULT_HOST, help="Server host")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Server port")
-    parser.add_argument("--raw-mode", action="store_true", help="Enable raw mode")
-    parser.add_argument("--no-space", "-ns", action="store_true", help="Disable adding a space after transcriptions")
+    parser.add_argument(
+        "--mode",
+        type=str,
+        choices=["code", "raw"],
+        default="default",
+        help="Set the transcription mode (code or raw)",
+    )
+    parser.add_argument(
+        "--no-space",
+        "-ns",
+        action="store_true",
+        help="Disable adding a space after transcriptions",
+    )
+    parser.add_argument("--cpu", action="store_true", help="Force server to run on CPU")
     return parser.parse_args()
 
 
-def start_whisper_server():
+def start_whisper_server(cpu=False):
     server_script = os.path.join(os.path.dirname(__file__), "server/server.py")
-    process = subprocess.Popen(["python", server_script])
+    command = ["python", server_script]
+    if cpu:
+        command.append("--cpu")
+    process = subprocess.Popen(command)
 
     return process
 
@@ -81,24 +94,27 @@ def wait_for_server(timeout=1800, interval=0.5):
     raise TimeoutError("Server failed to start within timeout")
 
 
-def process_typed(text):
+def process_typed(text, args):
     """
     Processes the given text input, applying transformations or executing macros
     based on predefined rules.
     Args:
         text (str): The input text to be processed.
+        args (argparse.Namespace): Parsed command-line arguments.
     Behavior:
-        - If RAW_MODE is disabled:
+        - If mode is "raw":
             - Converts the input text to lowercase and removes non-alphanumeric characters.
             - Checks if the processed text matches any key in the MACROS dictionary.
             - If a match is found:
                 - If the corresponding value is callable, executes the function and clears the text.
                 - Otherwise, replaces the text with the corresponding value from the MACROS dictionary.
-        - If RAW_MODE is enabled or no match is found, the original or modified text is typed using
+        - If mode is "code":
+            - [Stubbed functionality for code mode].
+        - If no match is found, the original or modified text is typed using
           the `keyboard_controller`.
     """
 
-    if not RAW_MODE:
+    if args.mode == "default":
         sluggified = "".join(char for char in text.lower() if char.isalnum())
 
         for key, value in MACROS.items():
@@ -119,17 +135,23 @@ def process_typed(text):
                     text = value
                     break
 
+    elif args.mode == "code":
+        # Stub for code mode functionality
+        print("[blue]Code mode is not yet implemented.[/blue]")
+
     if text:
         keyboard_controller.type(text)
 
 
 def main():
-    global keyboard_controller, SERVER_HOST, RAW_MODE
+    global keyboard_controller, SERVER_HOST
 
     args = parse_arguments()
     SERVER_HOST = f"{args.host}:{args.port}"
-    RAW_MODE = args.raw_mode
     add_space = not args.no_space
+
+    # Pass the --cpu flag to the server process if specified
+    server_process = start_whisper_server(cpu=args.cpu)
 
     RECORD_KEY = Key[VOICEKEY_DEFAULT]
 
@@ -199,7 +221,6 @@ def main():
         if key == Key.shift_r:
             pressed_shift = False
 
-
         if recording and (pressed_shift == False and pressed_ctrl == False):
             recording = False
 
@@ -239,7 +260,7 @@ def main():
                     print(
                         f'[yellow bold]>>>[/bold yellow] [white bold]"{processed_transcript}"[/bold white]'
                     )
-                    process_typed(processed_transcript)
+                    process_typed(processed_transcript, args)
 
             except requests.exceptions.RequestException as e:
                 print(f"[red]Error sending request to local API:[/red] {e}")
@@ -250,11 +271,11 @@ def main():
                 pressed_shift = False
                 pressed_ctrl = False
 
-
     def stop_progress():
         nonlocal progress_current
 
         if progress_current:
+            print("stopping progress", progress_current)
             progress.remove_task(progress_current)
             progress.stop()
 
@@ -264,21 +285,17 @@ def main():
     def start_progress(label: str):
         nonlocal progress_current
 
-        if progress_current:
-            progress.remove_task(progress_current)
-            progress.stop()
+        stop_progress()
 
         progress.start()
         progress_current = progress.add_task(label, total=None)
         # progress.start_task(progress_current)
 
-    def callback(indata, frames, time, status):
+    def input_stream_callback(indata, frames, time, status):
         if status:
             print(status)
         if recording:
             audio_data.append(indata.copy())
-
-    server_process = start_whisper_server()
 
     try:
         print(f"[yellow]Waiting for the server to be ready...[/yellow]")
@@ -287,7 +304,9 @@ def main():
             f"[green]Transcriber is active. Hold down CTRL+SHIFT to start dictating.[/green]"
         )
         with Listener(on_press=on_press, on_release=on_release) as listener:
-            with sd.InputStream(callback=callback, channels=1, samplerate=sample_rate):
+            with sd.InputStream(
+                callback=input_stream_callback, channels=1, samplerate=sample_rate
+            ):
                 listener.join()
     except TimeoutError as e:
         print(f"[red]Error: {e}[/red]")
