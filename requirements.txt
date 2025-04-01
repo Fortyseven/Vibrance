@@ -14,3 +14,5 @@ pynput==1.7.6
 scipy==1.11.3
 rich
 argparse
+ollama
+pydantic

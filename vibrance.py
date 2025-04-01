@@ -29,6 +29,7 @@ SERVER_HOST = f"{DEFAULT_HOST}:{DEFAULT_PORT}"
 MODE_WELCOME = {
     "default": "[yellow]=== (Default mode)[/yellow]",
     "code": "[yellow]=== (Code mode)[/yellow]",
+    "llm": "[yellow]=== (LLM mode)[/yellow]",
     "raw": "[yellow]=== (Raw mode)[/yellow]",
 }
 
@@ -46,9 +47,9 @@ def parse_arguments():
     parser.add_argument(
         "--mode",
         type=str,
-        choices=["code", "raw"],
+        choices=["default", "raw", "code", "llm"],
         default="default",
-        help="Set the transcription mode (code or raw)",
+        help="Set the transcription mode",
     )
     parser.add_argument(
         "--no-space",
@@ -101,7 +102,9 @@ def wait_for_server(timeout=1800, interval=0.5):
     raise TimeoutError("Server failed to start within timeout")
 
 
-def process_typed(dictated_text, args):
+def process_typed(
+    dictated_text, args, start_progress: callable, stop_progress: callable
+):
     """
     Processes the given text input, applying transformations or executing macros
     based on predefined rules.
@@ -141,10 +144,43 @@ def process_typed(dictated_text, args):
                     # Replace the matched key with its corresponding value
                     dictated_text = value
                     break
+    elif args.mode in ["code", "llm"]:
 
-    elif args.mode == "code":
-        # Stub for code mode functionality
-        print("[blue]Code mode is not yet implemented.[/blue]")
+        start_progress("[purple bold]Inferring...[/purple bold]")
+
+        if args.mode == "code":
+            from app.mode.code import fetch_code
+
+            dictated_text = fetch_code(dictated_text)
+
+        elif args.mode == "llm":
+            from app.mode.llm import fetch_response
+
+            dictated_text = fetch_response(dictated_text)
+
+        stop_progress()
+
+        dictated_text = dictated_text.strip() + "\n"
+
+        print(f"[yellow bold]>>> Generated response:[/yellow bold]\n{dictated_text}")
+
+        for char in dictated_text:
+            if char == "\n":
+                # for some reason we need to slow down when hitting ENTER or
+                # they get skipped sometimes
+                keyboard_controller.press(Key.enter)
+                time.sleep(0.2)
+                keyboard_controller.release(Key.enter)
+                time.sleep(0.2)
+            elif char == "\t":
+                keyboard_controller.type("    ")
+                pass
+            else:
+                keyboard_controller.press(char)
+                # time.sleep(0.1)
+                keyboard_controller.release(char)
+
+        return
 
     if dictated_text:
         keyboard_controller.type(dictated_text)
@@ -268,7 +304,9 @@ def main():
                     print(
                         f'[yellow bold]>>>[/bold yellow] [white bold]"{processed_transcript}"[/bold white]'
                     )
-                    process_typed(processed_transcript, args)
+                    process_typed(
+                        processed_transcript, args, start_progress, stop_progress
+                    )
 
             except requests.exceptions.RequestException as e:
                 print(f"[red]Error sending request to local API:[/red] {e}")
