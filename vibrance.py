@@ -118,16 +118,15 @@ def process_typed(
         dictated_text (str): The input text to be processed.
         args (argparse.Namespace): Parsed command-line arguments.
     Behavior:
-        - If mode is "raw":
+        - If mode is "default":
             - Converts the input text to lowercase and removes non-alphanumeric characters.
             - Checks if the processed text matches any key in the MACROS dictionary.
             - If a match is found:
                 - If the corresponding value is callable, executes the function and clears the text.
                 - Otherwise, replaces the text with the corresponding value from the MACROS dictionary.
-        - If mode is "code":
-            - [Stubbed functionality for code mode].
-        - If no match is found, the original or modified text is typed using
-          the `keyboard_controller`.
+        - Mode "raw": Simply types the dictated text without any processing.
+        - Mode "llm": Calls Ollama to generate a response based on the input text.
+        - Mode "code" Calls Ollama with a specialized prompt and structured response to help ensure we're getting code back.
     """
 
     if args.mode == "default":
