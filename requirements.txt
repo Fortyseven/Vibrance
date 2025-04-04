@@ -16,3 +16,4 @@ rich
 argparse
 ollama
 pydantic
+pyperclip
