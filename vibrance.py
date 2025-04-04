@@ -20,6 +20,8 @@ from pynput.keyboard import Controller as KeyboardController, Key, Listener
 from app.keyboard import keyboard_controller
 from app.macros import MACROS
 
+from pyperclip import paste as clipboard_paste
+
 MIN_SAMPLES_FOR_TRANSCRIBE = 8000
 VOICEKEY_DEFAULT = "shift_r"  # + CTRL
 
@@ -64,6 +66,11 @@ def parse_arguments():
         help="Disable adding a space after transcriptions",
     )
     parser.add_argument("--cpu", action="store_true", help="Force server to run on CPU")
+    parser.add_argument(
+        "--copy-selection",
+        action="store_true",
+        help="Enable copying from a selection (only available with llm or code modes)",
+    )
     return parser.parse_args()
 
 
@@ -228,6 +235,10 @@ def main():
 
     args = parse_arguments()
 
+    if args.copy_selection and args.mode not in ["llm", "code"]:
+        print("[red]Error: --copy-selection is only available with llm or code modes.[/red]")
+        sys.exit(1)
+
     SERVER_HOST = f"{args.host}:{args.port}"
     add_space = not args.no_space
 
@@ -306,6 +317,16 @@ def main():
             recording = False
 
             stop_progress()
+
+            if args.copy_selection:
+                keyboard_controller.press(Key.ctrl)
+                keyboard_controller.press("c")
+                keyboard_controller.release("c")
+                keyboard_controller.release(Key.ctrl)
+                clipboard_contents = clipboard_paste().strip()
+                print(f"[yellow]Selection contents: {clipboard_contents}[/yellow]")
+
+            return
 
             try:
                 audio_data_np = np.concatenate(audio_data, axis=0)
