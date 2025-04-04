@@ -236,7 +236,9 @@ def main():
     args = parse_arguments()
 
     if args.copy_selection and args.mode not in ["llm", "code"]:
-        print("[red]Error: --copy-selection is only available with llm or code modes.[/red]")
+        print(
+            "[red]Error: --copy-selection is only available with llm or code modes.[/red]"
+        )
         sys.exit(1)
 
     SERVER_HOST = f"{args.host}:{args.port}"
