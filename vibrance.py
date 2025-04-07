@@ -15,7 +15,7 @@ import sys
 import argparse
 from datetime import datetime
 
-from pynput.keyboard import Controller as KeyboardController, Key, Listener
+from pynput.keyboard import Controller as Key, Listener
 
 from app.keyboard import keyboard_controller
 from app.macros import MACROS
