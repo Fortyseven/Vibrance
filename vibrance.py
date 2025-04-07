@@ -71,6 +71,12 @@ def parse_arguments():
         action="store_true",
         help="Enable copying from a selection (only available with llm or code modes)",
     )
+    parser.add_argument(
+        "--typing-delay",
+        type=float,
+        default=0.01,
+        help="Set the typing delay in seconds between keypresses (0.01s default)",
+    )
     return parser.parse_args()
 
 
@@ -189,13 +195,16 @@ def process_typed(
                 pass
             else:
                 keyboard_controller.press(char)
-                # time.sleep(0.1)
+                time.sleep(args.typing_delay)
                 keyboard_controller.release(char)
 
         return
 
     if dictated_text:
-        keyboard_controller.type(dictated_text)
+        for char in dictated_text:
+            keyboard_controller.press(char)
+            time.sleep(args.typing_delay)
+            keyboard_controller.release(char)
 
 
 def display_banner():
