@@ -21,13 +21,16 @@ SPROMPT = """
 """.strip()
 
 
-def fetch_code(query: str) -> str:
+def fetch_code(query: str, clipboard_contents=None) -> str:
     global last_query
 
     if query.lower().startswith("retry") and last_query:
         query = last_query
 
     last_query = query
+
+    if clipboard_contents:
+        print(f"[blue]==== Clipboard:[/blue]\n{clipboard_contents}")
 
     response: ChatResponse = chat(
         model=MODEL,
@@ -38,7 +41,7 @@ def fetch_code(query: str) -> str:
             },
             {
                 "role": "user",
-                "content": query,
+                "content": query + (f"\n\n```\n{clipboard_contents}```" or ""),
             },
         ],
         format=CodeRequest.model_json_schema(),

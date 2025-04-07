@@ -122,7 +122,11 @@ def wait_for_server(timeout=1800, interval=0.5):
 
 
 def process_typed(
-    dictated_text, args, start_progress: callable, stop_progress: callable
+    dictated_text,
+    args,
+    start_progress: callable,
+    stop_progress: callable,
+    clipboard_contents=None,
 ):
     """
     Processes the given text input, applying transformations or executing macros
@@ -169,12 +173,12 @@ def process_typed(
         if args.mode == "code":
             from app.mode.code import fetch_code
 
-            dictated_text = fetch_code(dictated_text)
+            dictated_text = fetch_code(dictated_text, clipboard_contents)
 
         elif args.mode == "llm":
             from app.mode.llm import fetch_response
 
-            dictated_text = fetch_response(dictated_text)
+            dictated_text = fetch_response(dictated_text, clipboard_contents)
 
         stop_progress()
 
@@ -318,6 +322,8 @@ def main():
         """
         nonlocal recording, audio_data, pressed_shift, pressed_ctrl
 
+        clipboard_contents = ""
+
         if key == Key.ctrl_r:
             pressed_ctrl = False
 
@@ -336,8 +342,6 @@ def main():
                 keyboard_controller.release(Key.ctrl)
                 clipboard_contents = clipboard_paste().strip()
                 print(f"[yellow]Selection contents: {clipboard_contents}[/yellow]")
-
-            return
 
             try:
                 audio_data_np = np.concatenate(audio_data, axis=0)
@@ -374,7 +378,11 @@ def main():
                         f'[yellow bold]>>>[/bold yellow] [white bold]"{processed_transcript}"[/bold white]'
                     )
                     process_typed(
-                        processed_transcript, args, start_progress, stop_progress
+                        processed_transcript,
+                        args,
+                        start_progress,
+                        stop_progress,
+                        clipboard_contents=clipboard_contents,
                     )
 
             except requests.exceptions.RequestException as e:
