@@ -15,7 +15,7 @@ import sys
 import argparse
 from datetime import datetime
 
-from pynput.keyboard import Controller as Key, Listener
+from pynput.keyboard import Controller as KeyboardController, Key, Listener
 
 from app.keyboard import keyboard_controller
 from app.macros import MACROS
@@ -260,8 +260,6 @@ def main():
     # Pass the --cpu flag to the server process if specified
     server_process = start_whisper_server(cpu=args.cpu)
 
-    RECORD_KEY = Key[VOICEKEY_DEFAULT]
-
     recording = False
     audio_data = []
     sample_rate = 16000
@@ -305,12 +303,6 @@ def main():
     def on_release(key):
         """
         Handles the release of keyboard keys during the recording process.
-
-        This function is triggered when a key is released and performs the following:
-        - Updates the state of `pressed_ctrl` and `pressed_shift` when the respective keys are released.
-        - Stops the recording process if the `RECORD_KEY` is released without both `pressed_shift` and `pressed_ctrl` being active.
-        - Processes the recorded audio data, saves it as a WAV file, and sends it to a transcription server.
-        - Handles transcription responses and processes the resulting text.
 
         Args:
             key: The key that was released.
