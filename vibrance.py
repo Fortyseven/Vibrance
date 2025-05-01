@@ -22,6 +22,8 @@ from app.macros import MACROS
 
 from pyperclip import paste as clipboard_paste
 
+from app.core import VibranceCore, list_input_devices
+
 MIN_SAMPLES_FOR_TRANSCRIBE = 8000
 VOICEKEY_DEFAULT = "shift_r"  # + CTRL
 
@@ -40,6 +42,8 @@ MODE_WELCOME = {
     "llm": "[yellow]=== (LLM mode)[/yellow]",
     "raw": "[yellow]=== (Raw mode)[/yellow]",
 }
+
+core = VibranceCore()
 
 
 def parse_arguments():
@@ -77,17 +81,19 @@ def parse_arguments():
         default=0.01,
         help="Set the typing delay in seconds between keypresses (0.01s default)",
     )
+    parser.add_argument(
+        "--list-devices", action="store_true", help="List available input devices"
+    )
+    parser.add_argument(
+        "--input-device", type=int, help="Specify the input device index"
+    )
     return parser.parse_args()
 
 
-def start_whisper_server(cpu=False):
-    server_script = os.path.join(os.path.dirname(__file__), "app/server/server.py")
-    command = ["python", server_script]
-    if cpu:
-        command.append("--cpu")
-    process = subprocess.Popen(command)
-
-    return process
+def get_device_config(device_index):
+    """Fetches the default sample rate and maximum input channels for a device."""
+    device_info = sd.query_devices(device_index)
+    return int(device_info["default_samplerate"]), device_info["max_input_channels"]
 
 
 def wait_for_server(timeout=1800, interval=0.5):
@@ -248,21 +254,20 @@ def main():
 
     args = parse_arguments()
 
+    if args.list_devices:
+        list_input_devices()
+        sys.exit(0)
+
     if args.copy_selection and args.mode not in ["llm", "code"]:
         print(
             "[red]Error: --copy-selection is only available with llm or code modes.[/red]"
         )
         sys.exit(1)
 
-    SERVER_HOST = f"{args.host}:{args.port}"
     add_space = not args.no_space
-
-    # Pass the --cpu flag to the server process if specified
-    server_process = start_whisper_server(cpu=args.cpu)
 
     recording = False
     audio_data = []
-    sample_rate = 16000
 
     pressed_ctrl = False
     pressed_shift = False
@@ -412,6 +417,12 @@ def main():
             audio_data.append(indata.copy())
 
     try:
+        SERVER_HOST = f"{args.host}:{args.port}"
+
+        # Pass the --cpu flag to the server process if specified
+        core = VibranceCore(input_device=args.input_device)
+        server_process = core.start_server(cpu=args.cpu)
+
         print(f"[yellow]Waiting for the server to be ready...[/yellow]")
 
         wait_for_server()
@@ -420,10 +431,24 @@ def main():
         print(
             f"[green]Transcriber is active. Hold down CTRL+SHIFT to start dictating.[/green]"
         )
+
+        if core.input_device is not None:
+            sample_rate, max_channels = get_device_config(core.input_device)
+            print(f"Details for selected device {core.input_device}:")
+            print(sd.query_devices(core.input_device))
+        else:
+            sample_rate, max_channels = 44100, 1  # Fallback defaults
+
         with Listener(on_press=on_press, on_release=on_release) as listener:
             with sd.InputStream(
-                callback=input_stream_callback, channels=1, samplerate=sample_rate
+                callback=input_stream_callback,
+                channels=max_channels,
+                samplerate=sample_rate,
+                device=core.input_device,
             ):
+                print(
+                    f"[green]Listening on device: {sd.query_devices(core.input_device)['name'] if isinstance(sd.query_devices(core.input_device), dict) and 'name' in sd.query_devices(core.input_device) else 'System Default'}[/green]"
+                )
                 listener.join()
     except TimeoutError as e:
         print(f"[red]Error: {e}[/red]")
@@ -431,9 +456,7 @@ def main():
     except KeyboardInterrupt:
         print("\n[yellow]Stopping...[/yellow]")
     finally:
-        if server_process:
-            server_process.terminate()
-            server_process.wait()  # Ensure the process is fully terminated
+        core.stop_server()
         print("[green]Cleanup completed. Exiting...[/green]")
 
 

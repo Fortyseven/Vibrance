@@ -1,0 +1,21 @@
+[project]
+name = "vibrance"
+version = "0.1.0"
+description = "Daily use real-time audio transcription."
+readme = "README.md"
+requires-python = ">=3.11.6"
+dependencies = [
+    "evdev>=1.9.1",
+    "fastapi>=0.115.12",
+    "faster-whisper>=1.1.1",
+    "numpy>=2.2.5",
+    "ollama>=0.4.8",
+    "pydantic>=2.11.4",
+    "pynput==1.7.6",
+    "pyperclip>=1.9.0",
+    "requests>=2.32.3",
+    "rich>=14.0.0",
+    "scipy>=1.15.2",
+    "sounddevice>=0.5.1",
+    "uvicorn>=0.34.2",
+]
