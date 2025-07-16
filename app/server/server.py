@@ -1,4 +1,4 @@
-"""FastAPI server for Whisper transcription"""
+"""FastAPI server for modular speech recognition engines"""
 
 import uvicorn
 from fastapi import FastAPI
@@ -11,60 +11,76 @@ PORT = 4242
 
 app = FastAPI()
 
-model = None
+engine = None
 
+class SpeechRecognitionEngine:
+    def transcribe(self, file_path: str):
+        raise NotImplementedError
+
+class WhisperEngine(SpeechRecognitionEngine):
+    def __init__(self, cpu: bool):
+        if cpu:
+            self.model = WhisperModel("medium", device="cpu", compute_type="int8")
+        else:
+            self.model = WhisperModel("large", device="cuda", compute_type="float16")
+
+    def transcribe(self, file_path: str):
+        segments, info = self.model.transcribe(file_path)
+        return segments, info
+
+class ParakeetEngine(SpeechRecognitionEngine):
+    def __init__(self, cpu: bool):
+        pass  # Stub implementation
+
+    def transcribe(self, file_path: str):
+        # Stub: returns dummy result
+        class DummySegment:
+            def __init__(self, text):
+                self.text = text
+        return [DummySegment("[Parakeet stub: transcription not implemented]")], {}
 
 class TranscribeRequest(BaseModel):
     file_path: str
-
 
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
-
 @app.post("/transcribe/")
 async def transcribe(request: TranscribeRequest):
-    segments, info = model.transcribe(request.file_path)
+    segments, info = engine.transcribe(request.file_path)
     text = " ".join([segment.text.strip() for segment in segments])
     return {"text": text}
-
 
 def parse_arguments():
     """
     Parses command-line arguments for the server.
-
     Returns:
         argparse.Namespace: Parsed arguments.
     """
-    parser = argparse.ArgumentParser(description="FastAPI server for Whisper transcription")
-    parser.add_argument("--cpu", action="store_true", help="Force CPU usage for the Whisper model")
+    parser = argparse.ArgumentParser(description="FastAPI server for modular speech recognition engines")
+    parser.add_argument("--cpu", action="store_true", help="Force CPU usage for the model")
     parser.add_argument("--host", type=str, default=HOST, help="Host for the server")
     parser.add_argument("--port", type=int, default=PORT, help="Port for the server")
+    parser.add_argument("--engine", type=str, choices=["whisper", "parakeet"], default="whisper", help="Speech recognition engine to use")
     return parser.parse_args()
 
-
-def initialize_model(cpu: bool):
+def initialize_engine(engine_name: str, cpu: bool):
     """
-    Initializes the Whisper model based on the device preference.
-
-    Args:
-        cpu (bool): Whether to force CPU usage.
-
-    Returns:
-        WhisperModel: The initialized Whisper model.
+    Initializes the selected speech recognition engine.
     """
-    if cpu:
-        return WhisperModel("medium", device="cpu", compute_type="int8")
-    return WhisperModel("large", device="cuda", compute_type="float16")
-
+    if engine_name == "whisper":
+        return WhisperEngine(cpu)
+    elif engine_name == "parakeet":
+        return ParakeetEngine(cpu)
+    else:
+        raise ValueError(f"Unknown engine: {engine_name}")
 
 def run_server():
-    global model
+    global engine
     args = parse_arguments()
-    model = initialize_model(args.cpu)
+    engine = initialize_engine(args.engine, args.cpu)
     uvicorn.run(app, host=args.host, port=args.port, log_level="error")
-
 
 if __name__ == "__main__":
     run_server()
