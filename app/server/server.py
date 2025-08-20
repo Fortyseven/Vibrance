@@ -26,8 +26,7 @@ def health_check():
 
 @app.post("/transcribe/")
 async def transcribe(request: TranscribeRequest):
-    segments, info = engine.transcribe(request.file_path)
-    text = " ".join([segment.text.strip() for segment in segments])
+    text = engine.transcribe(request.file_path)
     return {"text": text}
 
 

@@ -364,6 +364,9 @@ def main():
                     f"{SERVER_HOST}/transcribe",
                     json={"file_path": recording_path},
                 )
+
+                stop_progress()
+
                 response.raise_for_status()
                 transcript = response.json()["text"]
 
@@ -387,7 +390,7 @@ def main():
             except Exception as e:
                 print(f"[red]Error processing transcript:[/red] {e}")
             finally:
-                stop_progress()
+
                 pressed_shift = False
                 pressed_ctrl = False
 

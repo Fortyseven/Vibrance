@@ -11,4 +11,5 @@ class WhisperEngine(SpeechRecognitionEngine):
 
     def transcribe(self, file_path: str):
         segments, info = self.model.transcribe(file_path)
-        return segments, info
+        segments = " ".join([segment.text.strip() for segment in segments])
+        return segments

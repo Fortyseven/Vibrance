@@ -3,11 +3,12 @@ from engines.speech_engine import SpeechRecognitionEngine
 
 class ParakeetEngine(SpeechRecognitionEngine):
     def __init__(self, cpu: bool):
-        pass  # Stub implementation
+        import nemo.collections.asr as nemo_asr
+
+        self.model = nemo_asr.models.ASRModel.from_pretrained(
+            model_name="nvidia/parakeet-tdt-0.6b-v2"
+        )
 
     def transcribe(self, file_path: str):
-        class DummySegment:
-            def __init__(self, text):
-                self.text = text
-
-        return [DummySegment("[Parakeet stub: transcription not implemented]")], {}
+        text = self.model.transcribe(file_path)[0][0]
+        return text

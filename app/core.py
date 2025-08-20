@@ -27,6 +27,8 @@ class VibranceCore:
         command = ["python", server_script]
         if cpu:
             command.append("--cpu")
+
+        command.append("--engine=parakeet")
         process = subprocess.Popen(command)
 
         self.server_process = process
