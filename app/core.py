@@ -22,13 +22,12 @@ class VibranceCore:
     def __init__(self, input_device=None):
         self.input_device = input_device
 
-    def start_server(self, cpu=False):
+    def start_server(self, cpu=False, model=None):
         server_script = os.path.join(os.path.dirname(__file__), "server/server.py")
         command = ["python", server_script]
         if cpu:
             command.append("--cpu")
-
-        command.append("--engine=parakeet")
+        command.append("--model=" + (model if model else "small"))
         process = subprocess.Popen(command)
 
         self.server_process = process

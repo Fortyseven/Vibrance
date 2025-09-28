@@ -3,11 +3,11 @@ from engines.speech_engine import SpeechRecognitionEngine
 
 
 class WhisperEngine(SpeechRecognitionEngine):
-    def __init__(self, cpu: bool):
+    def __init__(self, cpu: bool, model: str = "small"):
         if cpu:
-            self.model = WhisperModel("medium", device="cpu", compute_type="int8")
+            self.model = WhisperModel(model, device="cpu", compute_type="int8")
         else:
-            self.model = WhisperModel("large", device="cuda", compute_type="float16")
+            self.model = WhisperModel(model, device="cuda", compute_type="int8")
 
     def transcribe(self, file_path: str):
         segments, info = self.model.transcribe(file_path)

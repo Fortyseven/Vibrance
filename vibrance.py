@@ -71,6 +71,13 @@ def parse_arguments():
     )
     parser.add_argument("--cpu", action="store_true", help="Force server to run on CPU")
     parser.add_argument(
+        "--model",
+        type=str,
+        default="small",
+        help="Model size to use",
+        choices=["tiny", "base", "small", "medium", "large", "large-v2"],
+    )
+    parser.add_argument(
         "--copy-selection",
         action="store_true",
         help="Enable copying from a selection (only available with llm or code modes)",
@@ -424,7 +431,7 @@ def main():
 
         # Pass the --cpu flag to the server process if specified
         core = VibranceCore(input_device=args.input_device)
-        server_process = core.start_server(cpu=args.cpu)
+        server_process = core.start_server(cpu=args.cpu, model=args.model)
 
         print(f"[yellow]Waiting for the server to be ready...[/yellow]")
 

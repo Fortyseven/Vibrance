@@ -41,6 +41,7 @@ def parse_arguments():
     parser.add_argument(
         "--cpu", action="store_true", help="Force CPU usage for the model"
     )
+    parser.add_argument("--model", type=str, default="small", help="Model size to use")
     parser.add_argument("--host", type=str, default=HOST, help="Host for the server")
     parser.add_argument("--port", type=int, default=PORT, help="Port for the server")
     parser.add_argument(
@@ -53,7 +54,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def initialize_engine(engine_name: str, cpu: bool):
+def initialize_engine(engine_name: str, cpu: bool, model: str):
     """
     Initializes the selected speech recognition engine.
     """
@@ -66,7 +67,7 @@ def initialize_engine(engine_name: str, cpu: bool):
 def run_server():
     global engine
     args = parse_arguments()
-    engine = initialize_engine(args.engine, args.cpu)
+    engine = initialize_engine(args.engine, args.cpu, args.model)
     uvicorn.run(app, host=args.host, port=args.port, log_level="error")
 
 
