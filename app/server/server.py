@@ -4,7 +4,6 @@ import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
 from engines.whisper_engine import WhisperEngine
-from engines.parakeet_engine import ParakeetEngine
 import argparse
 
 HOST = "0.0.0.0"
@@ -47,7 +46,7 @@ def parse_arguments():
     parser.add_argument(
         "--engine",
         type=str,
-        choices=["whisper", "parakeet"],
+        choices=["whisper"],
         default="whisper",
         help="Speech recognition engine to use",
     )
@@ -59,9 +58,7 @@ def initialize_engine(engine_name: str, cpu: bool):
     Initializes the selected speech recognition engine.
     """
     if engine_name == "whisper":
-        return WhisperEngine(cpu)
-    elif engine_name == "parakeet":
-        return ParakeetEngine(cpu)
+        return WhisperEngine(cpu, model=model)
     else:
         raise ValueError(f"Unknown engine: {engine_name}")
 
