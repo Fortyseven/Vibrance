@@ -164,7 +164,6 @@ def process_typed(
 
         for key, value in MACROS.items():
             if sluggified == key:
-
                 if callable(value):
                     # If the value is a callable function, execute it
                     # This allows for special keys like 'up', 'down', etc.
@@ -180,7 +179,6 @@ def process_typed(
                     dictated_text = value
                     break
     elif args.mode in ["code", "llm"]:
-
         start_progress("[purple bold]Inferring...[/purple bold]")
 
         if args.mode == "code":
@@ -347,10 +345,17 @@ def main():
                 clipboard_contents = clipboard_paste().strip()
                 print(f"[yellow]Selection contents: {clipboard_contents}[/yellow]")
 
+            # Check if we have any audio data before attempting concatenation
+            if not audio_data:
+                print(
+                    "[yellow]>>> (No audio data captured; check your device.)[/yellow]"
+                )
+                return
+
             try:
                 audio_data_np = np.concatenate(audio_data, axis=0)
             except ValueError as e:
-                print(e)
+                print(f"[red]Error concatenating audio data:[/red] {e}")
                 return
 
             recording_path = os.path.abspath("recording.wav")
@@ -397,7 +402,6 @@ def main():
             except Exception as e:
                 print(f"[red]Error processing transcript:[/red] {e}")
             finally:
-
                 pressed_shift = False
                 pressed_ctrl = False
 
