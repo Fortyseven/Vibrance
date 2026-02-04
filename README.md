@@ -16,7 +16,7 @@ This is incredibly slow if you use CPU.
 - **Voice-to-Text Transcription**: Converts spoken words into text using a local Whisper model.
 - **Macros**: Supports one-word or phrase macros for quick actions like typing the current date or navigating text.
 - **LLM Integration**: Includes modes for interacting with an LLM or generating code snippets using Ollama.
-- **Push-to-Talk Trigger**: Uses a customizable key combination (default: `CTRL+SHIFT`) to start and stop recording.
+- **Push-to-Talk & Toggle Recording**: Uses a customizable key combination (default: `CTRL+SHIFT`) to start and stop recording. Supports both hold-to-record and toggle modes.
 - **Customizable Modes**:
   - `default`: Processes text with macros.
   - `raw`: Outputs raw transcriptions without processing.
@@ -65,6 +65,13 @@ Non-Linux installation is untested and is an exercise for the reader.
 
 2. Hold down `CTRL+SHIFT` to start dictating. Release the keys to stop recording.
 
+### Recording Modes
+
+Vibrance supports two recording modes:
+
+- **Hold Mode (default)**: Press and hold `CTRL+SHIFT` to record. Release both keys to stop recording and begin transcription.
+- **Toggle Mode**: Press `CTRL+SHIFT` once to start recording, press again to stop recording and begin transcription. Enable with `--toggle-recording`.
+
 ### Command-Line Options
 
 - `--host`: Specify the server host (default: `http://localhost`).
@@ -72,12 +79,28 @@ Non-Linux installation is untested and is an exercise for the reader.
 - `--mode`: Set the transcription mode (`default`, `raw`, `code`, `llm`).
 - `--no-space` or `-ns`: Disable adding a space after transcriptions.
 - `--cpu`: Force using CPU for transcription (this is often unusably slow).
+- `--toggle-recording`: Enable toggle mode for recording (press once to start, press again to stop).
+- `--model`: Specify the Whisper model size (`tiny`, `base`, `small`, `medium`, `large`, `large-v2`).
+- `--copy-selection`: Copy selected text before transcription (only available with `llm` or `code` modes).
+- `--typing-delay`: Set the typing delay between keypresses in seconds (default: `0.01`).
+- `--input-device`: Specify the input device index.
+- `--list-devices`: List available input devices.
 
-### Example
+### Examples
 
 To run the client in `code` mode:
 ```bash
 python vibrance.py --mode code
+```
+
+To use toggle recording mode instead of hold-to-record:
+```bash
+python vibrance.py --toggle-recording
+```
+
+To use toggle mode with LLM integration:
+```bash
+python vibrance.py --mode llm --toggle-recording
 ```
 
 ### Adding Macros
