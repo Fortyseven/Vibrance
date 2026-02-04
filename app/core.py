@@ -22,7 +22,7 @@ class VibranceCore:
     def __init__(self, input_device=None):
         self.input_device = input_device
 
-    def start_server(self, cpu=False, model=None):
+    def start_server(self, cpu=False, model=None) -> None:
         server_script = os.path.join(os.path.dirname(__file__), "server/server.py")
         command = ["python", server_script]
         if cpu:

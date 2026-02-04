@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import subprocess
 import requests
 import time
 from rich import print
@@ -15,7 +14,7 @@ import sys
 import argparse
 from datetime import datetime
 
-from pynput.keyboard import Controller as KeyboardController, Key, Listener
+from pynput.keyboard import Controller as Key, Listener  # KeyboardController,
 
 from app.keyboard import keyboard_controller
 from app.macros import MACROS
@@ -489,7 +488,7 @@ def main():
 
         # Pass the --cpu flag to the server process if specified
         core = VibranceCore(input_device=args.input_device)
-        server_process = core.start_server(cpu=args.cpu, model=args.model)
+        core.start_server(cpu=args.cpu, model=args.model)
 
         print("[yellow]Waiting for the server to be ready...[/yellow]")
 
