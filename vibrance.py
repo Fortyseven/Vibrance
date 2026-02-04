@@ -94,6 +94,11 @@ def parse_arguments():
     parser.add_argument(
         "--input-device", type=int, help="Specify the input device index"
     )
+    parser.add_argument(
+        "--toggle-recording",
+        action="store_true",
+        help="Enable toggle mode for recording (press to start, press again to stop)",
+    )
     return parser.parse_args()
 
 
@@ -276,6 +281,7 @@ def main():
 
     pressed_ctrl = False
     pressed_shift = False
+    should_stop_recording = False  # Flag for toggle mode
 
     progress = Progress()
     progress_current = None
@@ -294,7 +300,12 @@ def main():
             key: The key event object representing the key that was pressed.
         """
 
-        nonlocal recording, audio_data, pressed_ctrl, pressed_shift
+        nonlocal \
+            recording, \
+            audio_data, \
+            pressed_ctrl, \
+            pressed_shift, \
+            should_stop_recording
 
         if key == Key.ctrl_r:
             pressed_ctrl = True
@@ -303,12 +314,23 @@ def main():
             pressed_shift = True
 
         if pressed_ctrl and pressed_shift:
-            recording = True
-            audio_data = []
-
-            stop_progress()
-
-            start_progress("[green bold]Recording...[/bold green]")
+            if args.toggle_recording:
+                # Toggle mode: start recording on first press, mark for stop on second press
+                if not recording:
+                    recording = True
+                    audio_data = []
+                    should_stop_recording = False
+                    stop_progress()
+                    start_progress("[green bold]Recording...[/bold green]")
+                else:
+                    # Already recording, so this is the second press - mark to stop
+                    should_stop_recording = True
+            else:
+                # Hold mode: start recording when both keys are pressed
+                recording = True
+                audio_data = []
+                stop_progress()
+                start_progress("[green bold]Recording...[/bold green]")
 
     def on_release(key):
         """
@@ -322,9 +344,40 @@ def main():
             - Ensures that the recorded audio has a minimum length before attempting transcription.
             - Handles exceptions during audio processing and transcription requests gracefully.
         """
-        nonlocal recording, audio_data, pressed_shift, pressed_ctrl
+        nonlocal \
+            recording, \
+            audio_data, \
+            pressed_shift, \
+            pressed_ctrl, \
+            should_stop_recording
 
         clipboard_contents = ""
+
+        # Check if we should transcribe BEFORE updating key states
+        should_transcribe = False
+
+        if args.toggle_recording:
+            # Toggle mode: transcribe when marked to stop and a key is released
+            # Only trigger once by resetting the flag immediately
+            if should_stop_recording and recording:
+                should_transcribe = True
+                should_stop_recording = (
+                    False  # Reset immediately to prevent double-trigger
+                )
+        else:
+            # Hold mode: transcribe when both keys are released
+            # Check before updating the key states
+            if recording and key in (Key.ctrl_r, Key.shift_r):
+                # Will one of the keys be False after this release?
+                will_be_released = (key == Key.ctrl_r and pressed_ctrl) or (
+                    key == Key.shift_r and pressed_shift
+                )
+                if will_be_released:
+                    # Check if after this release both will be False
+                    future_ctrl = pressed_ctrl and key != Key.ctrl_r
+                    future_shift = pressed_shift and key != Key.shift_r
+                    if not future_ctrl and not future_shift:
+                        should_transcribe = True
 
         if key == Key.ctrl_r:
             pressed_ctrl = False
@@ -332,7 +385,7 @@ def main():
         if key == Key.shift_r:
             pressed_shift = False
 
-        if recording and (pressed_shift == False and pressed_ctrl == False):
+        if should_transcribe:
             recording = False
 
             stop_progress()
@@ -404,6 +457,7 @@ def main():
             finally:
                 pressed_shift = False
                 pressed_ctrl = False
+                # should_stop_recording already reset above to prevent double-trigger
 
     def stop_progress():
         nonlocal progress_current
@@ -437,14 +491,19 @@ def main():
         core = VibranceCore(input_device=args.input_device)
         server_process = core.start_server(cpu=args.cpu, model=args.model)
 
-        print(f"[yellow]Waiting for the server to be ready...[/yellow]")
+        print("[yellow]Waiting for the server to be ready...[/yellow]")
 
         wait_for_server()
 
         print(MODE_WELCOME[args.mode])
-        print(
-            f"[green]Transcriber is active. Hold down CTRL+SHIFT to start dictating.[/green]"
-        )
+        if args.toggle_recording:
+            print(
+                "[green]Transcriber is active. Press CTRL+SHIFT to start/stop dictating.[/green]"
+            )
+        else:
+            print(
+                "[green]Transcriber is active. Hold down CTRL+SHIFT to start dictating.[/green]"
+            )
 
         if core.input_device is not None:
             sample_rate, max_channels = get_device_config(core.input_device)

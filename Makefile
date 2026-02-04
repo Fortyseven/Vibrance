@@ -1,2 +1,2 @@
 run:
-	uv run vibrance.py
+	uv run vibrance.py --toggle-recording
