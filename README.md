@@ -120,6 +120,10 @@ The LLM and code generation modes use the `ollama` library. You can customize th
 
 NOTE: Like the rest of this project, this part is still a work in progress; one notable issue: code snippets tend to have indentation issues in VSCode and other editors that maintain consistent tab indents.
 
+## TODO
+
+- Swap Ollama support for a generic OpenAI endpoint (that Ollama also supports).
+
 ## Contributing
 
 This project is not open for contributions. However, feel free to fork it and make your own modifications. This may change down the line, but for now I'm working on this solo in my spare time for fun.
